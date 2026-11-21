@@ -21,12 +21,20 @@ pipeline {
         }
         stage('Docker Build and Push') {
             steps {
-                withDockerRegistry([credentialsId: "docker-hub", url: ""]) {
+                withDockerRegistry([credentialsId: "docker_hub", url: ""]) {
                     sh 'printenv'
                     sh 'sudo docker build -t ferjaouiadem/numeric-app:""$GIT_COMMIT"" .'
                     sh 'docker push ferjaouiadem/numeric-app:""$GIT_COMMIT""'
                 }
             }
         } 
+        stage('Kubernetes Deployment - DEV') {
+            steps {
+                withKubeConfig([credentialsId: 'kubecertif']) {
+                    sh "sed -i 's#replace#henchiahmed/numeric-app:${GIT_COMMIT}#g' k8s_deployment_service.yaml"
+                    sh "kubectl apply -f k8s_deployment_service.yaml"
+                }
+            }
+        }
     }
 }
